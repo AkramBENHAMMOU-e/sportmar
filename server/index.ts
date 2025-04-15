@@ -1,10 +1,31 @@
 import dotenv from 'dotenv';
 dotenv.config();
 import express, { type Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+
+// Activer CORS pour permettre les requêtes depuis le frontend
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://sport-maroc-shop-g9z7m49v5-akrams-projects-d5f41777.vercel.app', 'https://sport-maroc-shop.vercel.app'] 
+    : '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+}));
+
+// Middleware pour les en-têtes CORS supplémentaires
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', process.env.NODE_ENV === 'production' 
+    ? 'https://sport-maroc-shop-g9z7m49v5-akrams-projects-d5f41777.vercel.app' 
+    : '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -48,7 +69,7 @@ app.use((req, res, next) => {
     res.status(status).json({ message });
     throw err;
   });
-
+  
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
@@ -58,14 +79,17 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
+  // Utiliser le port fourni par l'environnement Haiku ou utiliser 5000 par défaut
+  const port = process.env.PORT || 5000;
+  
+  // En production, écouter sur toutes les interfaces réseau
+  // En développement, n'écouter que sur localhost
+  const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
+  
   server.listen({
-    port,
-    host: "localhost",
+    port: parseInt(port.toString()),
+    host: host,
   }, () => {
-    log(`serving on port ${port}`);
+    log(`Serveur démarré sur ${host}:${port} en mode ${process.env.NODE_ENV || 'development'}`);
   });
 })();

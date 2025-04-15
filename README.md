@@ -1,41 +1,62 @@
 # SportMarocShop
 
-## Déploiement sur Render.com
+Une boutique en ligne complète de produits sportifs marocains avec un frontend React et un backend Express.js.
 
-### Prérequis
-- Un compte [Render.com](https://render.com)
-- Votre code sur GitHub (recommandé pour un déploiement facile)
+## Technologies utilisées
 
-### Instructions de déploiement
+- **Frontend**: React.js, Vite, TailwindCSS, Shadcn/UI
+- **Backend**: Express.js, Node.js
+- **Base de données**: PostgreSQL (Neon Database)
+- **Stockage d'images**: Cloudinary
+- **Authentification**: Passport.js
 
-1. **Créez un nouveau service Web sur Render**
-   - Connectez-vous à votre compte Render
-   - Cliquez sur "New +" puis sélectionnez "Web Service"
-   - Connectez votre dépôt GitHub ou choisissez "Upload Files" pour télécharger votre code
+## Déploiement sur Vercel
 
-2. **Configurez votre application**
-   - Nom : SportMarocShop (ou le nom de votre choix)
-   - Runtime : Node
-   - Build Command : `npm install && npm run build`
-   - Start Command : `npm start`
+Le projet a été adapté pour être facilement déployé sur Vercel. Suivez ces étapes pour déployer l'application:
 
-3. **Configurez les variables d'environnement**
-   - Dans l'onglet "Environment", ajoutez les variables suivantes :
-     ```
-     NODE_ENV=production
-     DATABASE_URL=postgresql://neondb_owner:npg_GkyWtclF76xe@ep-muddy-scene-a2dyqp50-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require
-     CLOUDINARY_CLOUD_NAME=df59lsiz9
-     CLOUDINARY_API_KEY=757984422153192
-     CLOUDINARY_API_SECRET=I3wxoL4dP_wR3tQYbfdXxHX19IM
-     ```
+### 1. Prérequis
 
-4. **Déployez votre application**
-   - Cliquez sur "Create Web Service"
-   - Render va automatiquement construire et déployer votre application
-   - Une fois le déploiement terminé, cliquez sur l'URL fournie pour accéder à votre application
+- Compte [Vercel](https://vercel.com/)
+- Compte [Neon Database](https://neon.tech/) (ou autre fournisseur PostgreSQL)
+- Compte [Cloudinary](https://cloudinary.com/)
 
-### Notes importantes
+### 2. Configuration des variables d'environnement
 
-- Assurez-vous que votre base de données Neon est accessible depuis Render.com
-- Si vous rencontrez des problèmes, vérifiez les logs dans le tableau de bord Render
-- Render fournit un sous-domaine gratuit (votreapp.onrender.com) mais vous pouvez configurer un domaine personnalisé dans les paramètres
+Avant de déployer, assurez-vous d'avoir les variables d'environnement suivantes configurées sur Vercel:
+
+```
+DATABASE_URL=votre_url_de_base_de_données
+CLOUDINARY_CLOUD_NAME=votre_nom_de_cloud
+CLOUDINARY_API_KEY=votre_clé_api
+CLOUDINARY_API_SECRET=votre_secret_api
+NODE_ENV=production
+```
+
+### 3. Déploiement
+
+1. Connectez votre dépôt GitHub à Vercel
+2. Sélectionnez le dépôt SportMarocShop
+3. Configurez le projet avec les paramètres suivants:
+   - **Framework Preset**: Other
+   - **Root Directory**: ./
+   - **Build Command**: npm run build
+   - **Output Directory**: dist/public
+   - **Install Command**: npm install
+4. Ajoutez les variables d'environnement mentionnées ci-dessus
+5. Cliquez sur "Deploy"
+
+## Développement local
+
+Pour exécuter l'application en local:
+
+1. Clonez le dépôt
+2. Installez les dépendances: `npm install`
+3. Créez un fichier `.env` avec les variables d'environnement nécessaires
+4. Démarrez le serveur de développement: `npm run dev`
+
+## Structure du projet
+
+- `/client`: Code frontend React
+- `/server`: Code backend Express.js
+- `/api`: Points d'entrée pour les fonctions serverless Vercel
+- `/shared`: Code partagé entre frontend et backend

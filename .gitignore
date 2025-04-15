@@ -1,7 +1,21 @@
 node_modules
 dist
 .DS_Store
+# Environnement et secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Dossiers et fichiers de build
+dist/
+node_modules/
+.vercel/
+
+# Fichiers système
+.DS_Store
+Thumbs.db
 server/public
 vite.config.ts.*
 *.tar.gz
-.vercel
