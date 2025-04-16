@@ -88,14 +88,17 @@ export const api = {
 export const getMockData = (endpoint: string) => {
   // Mock data for different endpoints
   const mockData = {
+    // User data
     user: null,
-    'products/featured': [
+    
+    // Products data
+    products: [
       { 
         id: 1, 
         name: "Whey Protein Premium", 
         price: 35000, 
         description: "Protéine de haute qualité pour la récupération musculaire", 
-        imageUrl: "https://res.cloudinary.com/df59lsiz9/image/upload/v1717007292/sportmaroc/whey_protein_qjlh3v.jpg",
+        imageUrl: "https://images.unsplash.com/photo-1579722821273-0f6d7a4bd178?q=80&w=2070&auto=format&fit=crop",
         category: "supplement",
         subcategory: "proteines",
         stock: 15,
@@ -106,15 +109,101 @@ export const getMockData = (endpoint: string) => {
         name: "Tapis de Yoga Pro",
         price: 25000,
         description: "Tapis antidérapant haute densité pour yoga et fitness",
-        imageUrl: "https://res.cloudinary.com/df59lsiz9/image/upload/v1717007292/sportmaroc/yoga_mat_pz5dml.jpg",
+        imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2020&auto=format&fit=crop",
+        category: "equipment",
+        subcategory: "fitness",
+        stock: 8,
+        featured: true
+      },
+      {
+        id: 3,
+        name: "Haltères Ajustables",
+        price: 45000,
+        description: "Poids ajustables de 2kg à 20kg pour votre entraînement à domicile",
+        imageUrl: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=2187&auto=format&fit=crop",
+        category: "equipment",
+        subcategory: "musculation",
+        stock: 5,
+        featured: false
+      },
+      {
+        id: 4,
+        name: "BCAA Energisant",
+        price: 28000,
+        description: "Acides aminés pour la récupération et l'énergie pendant l'entraînement",
+        imageUrl: "https://images.unsplash.com/photo-1579722821273-0f6d7a4bd178?q=80&w=2070&auto=format&fit=crop",
+        category: "supplement",
+        subcategory: "acides-amines",
+        stock: 20,
+        featured: false
+      }
+    ],
+    
+    // Featured products
+    'products/featured': [
+      { 
+        id: 1, 
+        name: "Whey Protein Premium", 
+        price: 35000, 
+        description: "Protéine de haute qualité pour la récupération musculaire", 
+        imageUrl: "https://images.unsplash.com/photo-1579722821273-0f6d7a4bd178?q=80&w=2070&auto=format&fit=crop",
+        category: "supplement",
+        subcategory: "proteines",
+        stock: 15,
+        featured: true
+      },
+      {
+        id: 2,
+        name: "Tapis de Yoga Pro",
+        price: 25000,
+        description: "Tapis antidérapant haute densité pour yoga et fitness",
+        imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2020&auto=format&fit=crop",
         category: "equipment",
         subcategory: "fitness",
         stock: 8,
         featured: true
       }
     ],
-    cart: []
+    
+    // Cart data
+    cart: [],
+    
+    // Orders data
+    orders: [],
+    
+    // Categories
+    categories: [
+      { id: 1, name: "Suppléments", slug: "supplement" },
+      { id: 2, name: "Équipement", slug: "equipment" }
+    ],
+    
+    // Subcategories
+    subcategories: [
+      { id: 1, name: "Protéines", slug: "proteines", categoryId: 1 },
+      { id: 2, name: "Acides Aminés", slug: "acides-amines", categoryId: 1 },
+      { id: 3, name: "Fitness", slug: "fitness", categoryId: 2 },
+      { id: 4, name: "Musculation", slug: "musculation", categoryId: 2 }
+    ]
   };
+  
+  // Handle special cases for product detail
+  if (endpoint.startsWith('products/') && !endpoint.includes('featured') && !endpoint.includes('category')) {
+    const productId = parseInt(endpoint.split('/')[1]);
+    const product = mockData.products.find(p => p.id === productId);
+    return product || null;
+  }
+  
+  // Handle category filter
+  if (endpoint.startsWith('products/category/')) {
+    const category = endpoint.split('/')[2];
+    return mockData.products.filter(p => p.category === category);
+  }
+  
+  // Handle subcategory filter
+  if (endpoint.startsWith('products/subcategory/')) {
+    const subcategory = endpoint.split('/')[2];
+    return mockData.products.filter(p => p.subcategory === subcategory);
+  }
   
   // Return appropriate mock data
   return mockData[endpoint] || null;

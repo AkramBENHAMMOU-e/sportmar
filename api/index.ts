@@ -14,15 +14,27 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Configuration CORS pour l'API
+// Configuration CORS pour l'API - plus permissive
 app.use(cors({
-  origin: true,
+  origin: '*', // Autoriser toutes les origines
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
 
-// Middleware de logging simplifié
+// Middleware de logging détaillé
 app.use((req, res, next) => {
   console.log(`[API] ${req.method} ${req.url}`);
+  console.log(`Headers: ${JSON.stringify(req.headers)}`);
+  
+  // Intercepter la réponse pour logger
+  const originalSend = res.send;
+  res.send = function(body) {
+    console.log(`Response status: ${res.statusCode}`);
+    console.log(`Response body: ${typeof body === 'object' ? JSON.stringify(body).substring(0, 200) : body}`);
+    return originalSend.call(this, body);
+  };
+  
   next();
 });
 
@@ -76,45 +88,68 @@ function validateBody(schema: z.ZodTypeAny) {
   };
 }
 
+// Route de santé pour vérifier si l'API est en ligne
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV,
+    vercel: process.env.VERCEL === '1' ? true : false,
+  });
+});
+
 // Routes simplifiées pour déboguer
 app.get('/api/user', (req, res) => {
   try {
     res.json({ 
       message: "Route user fonctionne", 
-      authenticated: req.isAuthenticated ? req.isAuthenticated() : false,
-      env: process.env.NODE_ENV,
-      url: req.url
+      authenticated: false,
+      user: null
     });
   } catch (error) {
     console.error('Erreur route user:', error);
-    res.status(500).json({ message: "Erreur serveur", error: error.message });
+    res.status(500).json({ message: "Erreur serveur", error: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
 
 app.get("/api/products/featured", (req, res) => {
   try {
-    res.json({ 
-      message: "Route produits en vedette fonctionne", 
-      env: process.env.NODE_ENV,
-      url: req.url
-    });
+    res.json([
+      { 
+        id: 1, 
+        name: "Whey Protein Premium", 
+        price: 35000, 
+        description: "Protéine de haute qualité pour la récupération musculaire", 
+        imageUrl: "https://images.unsplash.com/photo-1579722821273-0f6d7a4bd178?q=80&w=2070&auto=format&fit=crop",
+        category: "supplement",
+        subcategory: "proteines",
+        stock: 15,
+        featured: true
+      },
+      {
+        id: 2,
+        name: "Tapis de Yoga Pro",
+        price: 25000,
+        description: "Tapis antidérapant haute densité pour yoga et fitness",
+        imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2020&auto=format&fit=crop",
+        category: "equipment",
+        subcategory: "fitness",
+        stock: 8,
+        featured: true
+      }
+    ]);
   } catch (error) {
     console.error('Erreur route produits en vedette:', error);
-    res.status(500).json({ message: "Erreur serveur", error: error.message });
+    res.status(500).json({ message: "Erreur serveur", error: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
 
 app.get("/api/cart", (req, res) => {
   try {
-    res.json({ 
-      message: "Route panier fonctionne", 
-      authenticated: req.isAuthenticated ? req.isAuthenticated() : false,
-      env: process.env.NODE_ENV,
-      url: req.url
-    });
+    res.json([]);
   } catch (error) {
     console.error('Erreur route panier:', error);
-    res.status(500).json({ message: "Erreur serveur", error: error.message });
+    res.status(500).json({ message: "Erreur serveur", error: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
 
@@ -142,7 +177,7 @@ app.use((err, req, res, next) => {
   console.error('Erreur API:', err);
   res.status(500).json({
     message: "Erreur interne du serveur",
-    error: err.message
+    error: err instanceof Error ? err.message : 'Unknown error'
   });
 });
 
@@ -154,7 +189,7 @@ export default async (req: Request, res: Response) => {
     console.error('Erreur handler serverless:', error);
     res.status(500).json({
       message: "Erreur interne du serveur",
-      error: error.message
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 }; 
