@@ -2,10 +2,16 @@
   "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/server/index.js" },
-    { "src": "/(.*)", "dest": "/public/$1" }
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/server/index.js" },
+    { "source": "/(.*)", "destination": "/public/$1" }
   ],
+  "functions": {
+    "dist/server/index.js": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
   "env": {
     "NODE_ENV": "production"
   }

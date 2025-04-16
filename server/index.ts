@@ -38,6 +38,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Initialiser le serveur Express
+let expressApp: any = null;
+
 // Fonction pour démarrer l'application
 async function startApp() {
   const server = await registerRoutes(app);
@@ -68,17 +71,20 @@ async function startApp() {
     });
   }
   
-  return app;
+  expressApp = app;
+  return server;
 }
-
-// Démarrer l'application
-const appPromise = startApp();
 
 // Pour les environnements serverless comme Vercel
-export default async function handler(req: Request, res: Response) {
-  const app = await appPromise;
-  app(req, res);
-}
+export default async (req: Request, res: Response) => {
+  // Si l'application n'est pas déjà initialisée, initialiser
+  if (!expressApp) {
+    await startApp();
+  }
+  
+  // Utiliser l'application Express pour traiter la requête
+  return expressApp(req, res);
+};
 
 // Exécuter la fonction de démarrage si c'est le fichier principal
 if (import.meta.url === `file://${process.argv[1]}`) {
