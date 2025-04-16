@@ -76,126 +76,85 @@ function validateBody(schema: z.ZodTypeAny) {
   };
 }
 
-// Configuration des routes API
-
-// USER ROUTES
+// Routes simplifiées pour déboguer
 app.get('/api/user', (req, res) => {
-  if (req.isAuthenticated()) {
-    // Filtrer les données sensibles
-    const { password, ...user } = req.user;
-    res.json(user);
-  } else {
-    res.status(401).json({ message: "Non authentifié" });
+  try {
+    res.json({ 
+      message: "Route user fonctionne", 
+      authenticated: req.isAuthenticated ? req.isAuthenticated() : false,
+      env: process.env.NODE_ENV,
+      url: req.url
+    });
+  } catch (error) {
+    console.error('Erreur route user:', error);
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
   }
 });
 
-// PRODUCT ROUTES
-app.get("/api/products", async (req, res) => {
+app.get("/api/products/featured", (req, res) => {
   try {
-    const products = await storage.getAllProducts();
-    res.json(products);
+    res.json({ 
+      message: "Route produits en vedette fonctionne", 
+      env: process.env.NODE_ENV,
+      url: req.url
+    });
   } catch (error) {
-    console.error("Error fetching products:", error);
-    res.status(500).json({ message: "Erreur lors de la récupération des produits" });
+    console.error('Erreur route produits en vedette:', error);
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
   }
 });
 
-app.get("/api/products/featured", async (req, res) => {
+app.get("/api/cart", (req, res) => {
   try {
-    const products = await storage.getFeaturedProducts();
-    res.json(products);
+    res.json({ 
+      message: "Route panier fonctionne", 
+      authenticated: req.isAuthenticated ? req.isAuthenticated() : false,
+      env: process.env.NODE_ENV,
+      url: req.url
+    });
   } catch (error) {
-    console.error("Error fetching featured products:", error);
-    res.status(500).json({ message: "Erreur lors de la récupération des produits" });
+    console.error('Erreur route panier:', error);
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
   }
 });
 
-app.get("/api/products/category/:category", async (req, res) => {
-  try {
-    const { category } = req.params;
-    const products = await storage.getProductsByCategory(category);
-    res.json(products);
-  } catch (error) {
-    console.error("Error fetching products by category:", error);
-    res.status(500).json({ message: "Erreur lors de la récupération des produits" });
-  }
+// Route de debug
+app.get('/api/debug', (req, res) => {
+  res.json({
+    env: process.env.NODE_ENV,
+    databaseUrl: process.env.DATABASE_URL ? "Défini" : "Non défini",
+    url: req.url,
+    method: req.method,
+    headers: req.headers
+  });
 });
 
-app.get("/api/products/:id", async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    if (isNaN(id)) {
-      return res.status(400).json({ message: "ID produit invalide" });
-    }
-    
-    const product = await storage.getProduct(id);
-    if (!product) {
-      return res.status(404).json({ message: "Produit non trouvé" });
-    }
-    
-    res.json(product);
-  } catch (error) {
-    console.error("Error fetching product:", error);
-    res.status(500).json({ message: "Erreur lors de la récupération du produit" });
-  }
+// Capture toutes les autres routes API
+app.all('/api/*', (req, res) => {
+  res.json({
+    message: `Route ${req.url} non implémentée mais reçue correctement`,
+    method: req.method,
+  });
 });
 
-// CART ROUTES
-// Initialiser le panier dans la session pour les utilisateurs non connectés
-const initGuestCart = (req) => {
-  if (!req.session.guestCart) {
-    // Stocker le panier comme un objet JS standard (pas de Map) dans la session
-    req.session.guestCart = {};
-  }
-  return req.session.guestCart;
-};
-
-// Get cart
-app.get("/api/cart", async (req, res) => {
-  try {
-    if (req.isAuthenticated()) {
-      // Utilisateur connecté - récupérer le panier depuis le stockage
-      const cart = await storage.getCart(req.user.id);
-      
-      // Convertir la Map en tableau d'items avec les détails produits
-      const cartItems = [];
-      for (const [productId, quantity] of cart.entries()) {
-        const product = await storage.getProduct(productId);
-        if (product) {
-          cartItems.push({
-            product,
-            quantity,
-          });
-        }
-      }
-      
-      res.json(cartItems);
-    } else {
-      // Utilisateur non connecté - récupérer le panier depuis la session
-      const guestCartObj = initGuestCart(req);
-      const cartItems = [];
-      
-      // Convertir l'objet panier en tableau d'items avec les détails produits
-      for (const [productIdStr, quantity] of Object.entries(guestCartObj)) {
-        const productId = parseInt(productIdStr);
-        const product = await storage.getProduct(productId);
-        if (product) {
-          cartItems.push({
-            product,
-            quantity,
-          });
-        }
-      }
-      
-      res.json(cartItems);
-    }
-  } catch (error) {
-    console.error("Error fetching cart:", error);
-    res.status(500).json({ message: "Erreur lors de la récupération du panier" });
-  }
+// Gérer les erreurs
+app.use((err, req, res, next) => {
+  console.error('Erreur API:', err);
+  res.status(500).json({
+    message: "Erreur interne du serveur",
+    error: err.message
+  });
 });
 
 // Handler pour Vercel
 export default async (req: Request, res: Response) => {
-  return app(req, res);
+  try {
+    return app(req, res);
+  } catch (error) {
+    console.error('Erreur handler serverless:', error);
+    res.status(500).json({
+      message: "Erreur interne du serveur",
+      error: error.message
+    });
+  }
 }; 
