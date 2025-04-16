@@ -31,8 +31,8 @@ const fetchWithTimeout = async (url: string, options: RequestInit = {}) => {
     }
     
     return await response.json();
-  } catch (error) {
-    if (error.name === 'AbortError') {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.name === 'AbortError') {
       throw new Error('Request timeout');
     }
     throw error;
@@ -84,10 +84,41 @@ export const api = {
   health: () => fetchWithTimeout(`${apiBaseUrl}/debug`),
 };
 
+interface MockData {
+  user: null;
+  products: Array<{
+    id: number; 
+    name: string; 
+    price: number; 
+    description: string; 
+    imageUrl: string;
+    category: string;
+    subcategory: string;
+    stock: number;
+    featured: boolean;
+  }>;
+  'products/featured': Array<{
+    id: number; 
+    name: string; 
+    price: number; 
+    description: string; 
+    imageUrl: string;
+    category: string;
+    subcategory: string;
+    stock: number;
+    featured: boolean;
+  }>;
+  cart: never[];
+  orders: never[];
+  categories: Array<{ id: number; name: string; slug: string }>;
+  subcategories: Array<{ id: number; name: string; slug: string; categoryId: number }>;
+  [key: string]: any;
+}
+
 // Function to get mock data during API outages
-export const getMockData = (endpoint: string) => {
+export const getMockData = (endpoint: string): any => {
   // Mock data for different endpoints
-  const mockData = {
+  const mockData: MockData = {
     // User data
     user: null,
     
@@ -213,8 +244,8 @@ export const getMockData = (endpoint: string) => {
 export const fetchWithFallback = async (apiCall: () => Promise<any>, mockEndpoint: string) => {
   try {
     return await apiCall();
-  } catch (error) {
-    console.error(`API Error (using fallback): ${error.message}`);
+  } catch (error: unknown) {
+    console.error(`API Error (using fallback): ${error instanceof Error ? error.message : 'Unknown error'}`);
     const mockData = getMockData(mockEndpoint);
     return mockData;
   }
