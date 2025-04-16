@@ -2,15 +2,10 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 // Fonction utilitaire pour obtenir l'URL de base de l'API
 function getBaseUrl() {
-  // URL de l'API backend déployée séparément
-  // TODO: Remplacez cette URL par celle de votre backend après l'avoir déployé
-  const BACKEND_URL = process.env.REACT_APP_API_URL || 'https://votre-backend-a-deployer.com';
-  
-  // En production, utilisez l'URL du backend déployé
+  // En production sur Vercel, utilisez l'URL de déploiement
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-    return BACKEND_URL;
+    return window.location.origin;
   }
-  
   // En développement local
   return 'http://localhost:5000';
 }
