@@ -2,12 +2,18 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 // Fonction utilitaire pour obtenir l'URL de base de l'API
 function getBaseUrl() {
+  // Utiliser la variable d'environnement si disponible
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
   // En production sur Vercel, utilisez l'URL de déploiement
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-    return window.location.origin;
+    return `${window.location.origin}/api`;
   }
-  // En développement local
-  return 'http://localhost:5000';
+  
+  // Fallback pour le développement local
+  return 'http://localhost:5000/api';
 }
 
 async function throwIfResNotOk(res: Response) {
@@ -33,14 +39,20 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // S'assurer que l'URL commence par /api pour les requêtes API
-  if (!url.startsWith('http') && !url.startsWith('/api')) {
-    url = `/api${url.startsWith('/') ? '' : '/'}${url}`;
-  }
-
-  // Si l'URL n'est pas absolue, préfixer avec l'URL de base
-  if (!url.startsWith('http')) {
-    url = `${getBaseUrl()}${url}`;
+  // Si l'URL est déjà absolue, ne rien changer
+  if (url.startsWith('http')) {
+    // URL déjà complète
+  } 
+  // Si l'URL commence déjà par /api, on ajoute juste la base sans /api
+  else if (url.startsWith('/api')) {
+    const baseWithoutApi = getBaseUrl().endsWith('/api') 
+      ? getBaseUrl().slice(0, -4) // Enlever /api de la fin
+      : getBaseUrl();
+    url = `${baseWithoutApi}${url}`;
+  } 
+  // Sinon on ajoute la base complète et on s'assure qu'il y a bien un slash
+  else {
+    url = `${getBaseUrl()}${url.startsWith('/') ? url : `/${url}`}`;
   }
 
   console.log(`API Request: ${method} ${url}`);
@@ -72,14 +84,20 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     let url = queryKey[0] as string;
     
-    // S'assurer que l'URL commence par /api pour les requêtes API
-    if (!url.startsWith('http') && !url.startsWith('/api')) {
-      url = `/api${url.startsWith('/') ? '' : '/'}${url}`;
-    }
-
-    // Si l'URL n'est pas absolue, préfixer avec l'URL de base
-    if (!url.startsWith('http')) {
-      url = `${getBaseUrl()}${url}`;
+    // Si l'URL est déjà absolue, ne rien changer
+    if (url.startsWith('http')) {
+      // URL déjà complète
+    } 
+    // Si l'URL commence déjà par /api, on ajoute juste la base sans /api
+    else if (url.startsWith('/api')) {
+      const baseWithoutApi = getBaseUrl().endsWith('/api') 
+        ? getBaseUrl().slice(0, -4) // Enlever /api de la fin
+        : getBaseUrl();
+      url = `${baseWithoutApi}${url}`;
+    } 
+    // Sinon on ajoute la base complète et on s'assure qu'il y a bien un slash
+    else {
+      url = `${getBaseUrl()}${url.startsWith('/') ? url : `/${url}`}`;
     }
     
     console.log(`Query Request: ${url}`);

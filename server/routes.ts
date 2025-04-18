@@ -6,7 +6,6 @@ import { insertProductSchema, insertOrderSchema, insertOrderItemSchema, cartItem
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { v2 as cloudinary } from 'cloudinary';
-import cors from 'cors';
 
 // Configurer Cloudinary - ajoutez ceci après les imports
 cloudinary.config({
@@ -49,12 +48,6 @@ function validateBody(schema: z.ZodTypeAny) {
 export function registerRoutes(app: Express): Server {
   // Set up authentication
   setupAuth(app);
-  
-  // Configurer CORS pour l'API
-  app.use('/api', cors({
-    origin: true, // Autorise les requêtes depuis la même origine
-    credentials: true // Autorise les cookies
-  }));
   
   // PRODUCT ROUTES
   
@@ -674,7 +667,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Retourner un serveur HTTP
-  const server = createServer(app);
-  return server;
+  const httpServer = createServer(app);
+  return httpServer;
 }

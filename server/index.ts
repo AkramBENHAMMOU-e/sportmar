@@ -38,11 +38,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Initialiser le serveur Express
-let expressApp: any = null;
-
-// Fonction pour démarrer l'application
-async function startApp() {
+(async () => {
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -53,40 +49,23 @@ async function startApp() {
     throw err;
   });
 
-  // Configurer différemment selon l'environnement
+  // importantly only setup vite in development and after
+  // setting up all the other routes so the catch-all route
+  // doesn't interfere with the other routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
-  // En développement ou sur un serveur normal, écouter sur le port 5000
-  if (process.env.VERCEL !== '1') {
-    const port = process.env.PORT || 5000;
-    server.listen({
-      port: Number(port),
-      host: "localhost",
-    }, () => {
-      log(`serving on port ${port}`);
-    });
-  }
-  
-  expressApp = app;
-  return server;
-}
-
-// Pour les environnements serverless comme Vercel
-export default async (req: Request, res: Response) => {
-  // Si l'application n'est pas déjà initialisée, initialiser
-  if (!expressApp) {
-    await startApp();
-  }
-  
-  // Utiliser l'application Express pour traiter la requête
-  return expressApp(req, res);
-};
-
-// Exécuter la fonction de démarrage si c'est le fichier principal
-if (import.meta.url === `file://${process.argv[1]}`) {
-  startApp();
-}
+  // ALWAYS serve the app on port 5000
+  // this serves both the API and the client.
+  // It is the only port that is not firewalled.
+  const port = 5000;
+  server.listen({
+    port,
+    host: "localhost",
+  }, () => {
+    log(`serving on port ${port}`);
+  });
+})();
